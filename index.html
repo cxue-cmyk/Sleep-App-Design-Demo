@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sleep Cycle App</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --navy: #12132e; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
+  
+  html, body { 
+    height: 100%; 
+    background: #0a0b18; 
+    overflow: hidden; 
+    font-family: 'Poppins', sans-serif; 
+    display: flex; align-items: center; justify-content: center;
+    -webkit-user-select: text; user-select: text; 
+  }
+
+  .app { 
+    position: relative; 
+    width: 1179px; 
+    height: 2556px; 
+    background: var(--navy); 
+    overflow: hidden; 
+    transform-origin: center center;
+    box-shadow: 0 0 100px rgba(0,0,0,.8);
+    visibility: hidden; 
+  }
+
+  .screen { 
+    position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; 
+    opacity: 0; visibility: hidden; transition: opacity .4s ease, visibility .4s; 
+    scrollbar-width: none; 
+  }
+  .screen::-webkit-scrollbar { display: none; }
+  .screen.active { opacity: 1; visibility: visible; }
+
+  button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+  
+  .back { position: absolute; top: 60px; left: 60px; width: 102px; height: 102px; display: grid; place-items: center; z-index: 20; }
+  .back::before { content: ''; width: 0; height: 0; border-top: 30px solid transparent; border-bottom: 30px solid transparent; border-right: 42px solid #b6b2d4; }
+  .back.dark::before { border-right-color: #5b564d; }
+
+  /* =========================================
+     1. 欢迎页
+  ========================================= */
+  #s-welcome { 
+    background-image: url('./IMG_8345.jpg'); 
+    background-size: cover; background-position: center top; background-repeat: no-repeat;
+    background-color: #12132e; position: absolute; inset: 0;
+  }
+  .welcome-text-area { position: absolute; top: 1550px; left: 0; width: 100%; text-align: center; z-index: 2; }
+  .script-sm { font-family: 'Dancing Script', cursive; font-size: 96px; font-weight: 600; color: #e2e0f5; margin: 0 0 20px; }
+  .script-lg { font-family: 'Dancing Script', cursive; font-size: 162px; font-weight: 700; color: #e6e4f7; margin: 0; text-shadow: 0 12px 72px rgba(0,0,0,.3); }
+  
+  .welcome-btn-area { position: absolute; top: 2020px; left: 0; width: 100%; display: flex; justify-content: center; z-index: 2; }
+  .btn-login { width: 62%; max-width: 750px; height: 168px; border-radius: 84px; background: #2f2b53; color: #fff; font-size: 51px; font-weight: 700; box-shadow: 0 30px 78px rgba(0,0,0,.35); }
+  .signup { position: absolute; right: 78px; bottom: 90px; z-index: 3; display: flex; align-items: center; gap: 30px; font-size: 48px; color: #dedbf0; }
+  .signup .tri { width: 0; height: 0; border-top: 24px solid transparent; border-bottom: 24px solid transparent; border-left: 36px solid #efeefb; }
+
+  /* =========================================
+     通用主页布局
+  ========================================= */
+  .pad { position: relative; z-index: 2; padding: 210px 66px 102px; }
+  .h-title { font-size: 66px; font-weight: 700; margin-bottom: 54px; }
+  .search-pill { height: 138px; border-radius: 69px; margin-bottom: 54px; }
+  .card-grid { display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 160px; gap: 30px; }
+  .card { position: relative; border-radius: 54px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding-bottom: 30px; transition: transform .2s; overflow: hidden; }
+  .card:active { transform: scale(.955); }
+  .card img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
+  .card span { position: relative; z-index: 2; font-size: 39px; font-weight: 600; text-shadow: 0px 2px 10px rgba(255,255,255,0.5); }
+  
+  .c-sleep { grid-area: 1/1/3/2; }
+  .c-medit { grid-area: 1/2/5/3; border-radius: 72px; }
+  .c-article { grid-area: 3/1/7/2; border-radius: 72px; }
+  .c-music { grid-area: 5/2/8/3; border-radius: 60px; }
+  .c-analysis { grid-area: 7/1/11/2; border-radius: 72px; }
+  .c-daytime, .c-night { grid-area: 8/2/10/3; border-radius: 66px; }
+
+  #s-home-night { background: linear-gradient(180deg, #111229 0%, #1e1d44 34%, #4a4480 72%, #877bb2 100%); }
+  #s-home-night .h-title { color: #fff; }
+  #s-home-night .search-pill { background: rgba(196,192,224,.55); }
+  #s-home-night .card { color: #fff; }
+  #s-home-night .c-daytime { background: #2f2c4d; }
+
+  #s-home-day { background-image: url('./IMG_8281.jpg'); background-size: cover; background-position: center; background-color: #e5e0d7; }
+  #s-home-day .h-title { color: #5b564d; }
+  #s-home-day .search-pill { background: #6e6358; }
+  #s-home-day .card { color: #5b564d; }
+  #s-home-day .c-night { background: #5c4f44; color: #e8e3da; }
+
+
+  /* =========================================
+     4. 夜间音乐页 (强制固定尺寸)
+  ========================================= */
+  #s-music { display: flex; flex-direction: column; background: #12132e; height: 100%; }
+  .music-top { flex: 1; background: linear-gradient(180deg, #111229 0%, #232250 45%, #4d4783 80%, #6a5f9a 100%); position: relative; }
+  
+  .vinyl-wrap { 
+    position: absolute; 
+    top: 40%; 
+    left: calc(50% - 700px); 
+    transform: translate(-50%,-50%); 
+    width: 1050px; 
+    height: 1050px; 
+  }
+  
+  /* 使用 100% 撑满，不让它变形或裁切 */
+  .vinyl-img { 
+    width: 230%; 
+    height: 230%; 
+    object-fit: contain; 
+    display: block; 
+  }
+
+  /* 唱臂固定右上角 */
+  .tonearm { 
+    position: absolute; 
+    right: 50px; 
+    top: 0px; 
+    width: 700px; 
+    height: auto; 
+    z-index: 15; 
+    transform-origin: top right; 
+    transform: rotate(-15deg); 
+    pointer-events: none; 
+  }
+
+  .music-bottom { background: #9a92c0; padding: 60px 60px 80px; }
+  .music-row { display: flex; gap: 40px; overflow-x: auto; padding-bottom: 20px; scrollbar-width: none; }
+  .music-row::-webkit-scrollbar { display: none; }
+  
+  /* 卡片 */
+  #s-music .music-card { 
+    flex: 0 0 450px; height: 450px; border-radius: 72px; background: #6f66a0; 
+    display: flex; flex-direction: column; align-items: center; justify-content: center; 
+    color: #dcd9ee; font-size: 42px; font-weight: 500; position: relative;
+  }
+  /* 暴力扩大图标：直接写死宽度 300px，如果还是小可以改大 */
+  #s-music .music-card img { width: 300px; height: auto; object-fit: contain; }
+  #s-music .music-card span { position: absolute; bottom: 40px; }
+
+  .search-row { display: flex; align-items: center; gap: 36px; margin-top: 40px; }
+  .search-row .search-pill { flex: 1; height: 130px; border-radius: 65px; background: rgba(150,143,190,.5); margin: 0; }
+  #s-music .search-btn { width: 130px; height: 130px; border-radius: 36px; background: rgba(150,143,190,.5); display: grid; place-items: center; overflow: hidden; }
+  #s-music .search-btn img { width: 80%; height: 80%; object-fit: contain; }
+
+
+  /* =========================================
+     6. 灰色睡眠页
+  ========================================= */
+  #s-sleep { display: flex; flex-direction: column; background: #2a2724; height: 100%; }
+  .sleep-top { flex: 1; background: #d9d4cb; position: relative; }
+  
+  .sleep-top .vinyl-wrap {
+    position: absolute; top: 150px; left: 50%; transform: translateX(-50%); 
+    width: 1050px; height: 1050px;
+  }
+  
+  .sleep-top .tonearm { 
+    position: absolute; right: -20px; top: 0px; width: 950px; 
+    transform-origin: top right; transform: rotate(-15deg); z-index: 15; 
+  }
+
+  .sleep-label { 
+    position: absolute; bottom: 40px; width: 100%; text-align: center; 
+    font-size: 66px; font-weight: 500; letter-spacing: 9px; color: #2b2724; z-index: 5; 
+  }
+  
+  .sleep-bottom { background: #2a2724; padding: 60px; }
+  .sleep-bottom .music-card { 
+    flex: 0 0 450px; height: 450px; border-radius: 72px; background: #b8b2a7; 
+    display: flex; flex-direction: column; align-items: center; justify-content: center; 
+    color: #7c766b; font-size: 42px; font-weight: 500; position: relative;
+  }
+  .sleep-bottom .music-card img { width: 300px; height: auto; object-fit: contain; }
+  .sleep-bottom .music-card span { position: absolute; bottom: 40px; }
+
+
+  /* =========================================
+     7A. 夜间晚安页
+  ========================================= */
+  #s-evening-night {
+    background-image: url('./IMG_8277.jpg'); background-size: cover; background-position: center top; background-repeat: no-repeat;
+    background-color: #12132e; position: absolute; inset: 0; overflow: hidden;
+  }
+  #s-evening-night .back::before { border-right-color: #ffffff; }
+  .evening-text-night { position: absolute; top: 1600px; left: 0; width: 100%; display: flex; flex-direction: column; align-items: center; z-index: 3; }
+  .evening-text-night .greeting { font-size: 110px; font-weight: 700; color: #e6e4f7; margin: 0 0 30px; letter-spacing: 2px; }
+  .evening-text-night .clock { font-size: 190px; font-weight: 700; color: #e6e4f7; line-height: 1; }
+
+  /* =========================================
+     7B. 白天下午页
+  ========================================= */
+  #s-evening-day { 
+    position: absolute; inset: 0; overflow: hidden; 
+    background-image: url('./IMG_8278.jpg'); background-size: cover; background-position: center top; background-color: #e5e0d7;
+  }
+  .evening-bed { position: absolute; top: 0px; left: 50%; transform: translateX(-50%); width: 120%; height: auto; z-index: 2; }
+  .evening-dots { position: absolute; top: 800px; left: 50%; transform: translateX(-50%); width: 600px; height: 600px; object-fit: contain; z-index: 3; }
+  .evening-text-day { position: absolute; top: 1500px; left: 0; width: 100%; display: flex; flex-direction: column; align-items: center; z-index: 4; }
+  .evening-text-day .greeting { font-size: 100px; font-weight: 700; color: #7d776c; margin: 0 0 30px; letter-spacing: 1.5px; text-shadow: 0 4px 10px rgba(255,255,255,0.8); }
+  .evening-text-day .clock { font-size: 190px; font-weight: 700; color: #2b2724; line-height: 1; }
+  .evening-flowers { position: absolute; bottom: 0; left: 0; width: 100%; z-index: 5; pointer-events: none; }
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+
+  <section class="screen active" id="s-welcome">
+    <div class="welcome-text-area">
+      <p class="script-sm">Welcome To</p>
+      <h1 class="script-lg">Sleep Cycle</h1>
+    </div>
+    <div class="welcome-btn-area">
+      <button class="btn-login" data-go="s-home-night">Log In</button>
+    </div>
+    <button class="signup" data-go="s-home-night">Sign Up <span class="tri"></span></button>
+  </section>
+
+  <section class="screen" id="s-home-night">
+    <div class="pad">
+      <button class="back" data-go="s-welcome"></button>
+      <h2 class="h-title">Time To Relax</h2>
+      <div class="search-pill"></div>
+      <div class="card-grid">
+        <button class="card c-sleep" data-go="s-evening-night">
+          <img src="./IMG_8260.png" alt="Sleep"><span>Sleep</span>
+        </button>
+        <button class="card c-medit" data-go="s-music">
+          <img src="./IMG_8332.png" alt="Meditation"><span>Meditation</span>
+        </button>
+        <button class="card c-article" data-go="s-music">
+          <img src="./IMG_8342.png" alt="Article"><span>Article</span>
+        </button>
+        <button class="card c-music" data-go="s-music">
+          <img src="./IMG_8336.png" alt="Music"><span>Music</span>
+        </button>
+        <button class="card c-analysis" data-go="s-evening-night">
+          <img src="./IMG_8339.png" alt="Analysis"><span>Analysis</span>
+        </button>
+        <button class="card c-daytime" data-go="s-home-day"><span>Daytime</span></button>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="s-home-day">
+    <div class="pad">
+      <button class="back dark" data-go="s-home-night"></button>
+      <h2 class="h-title">Time To Relax</h2>
+      <div class="search-pill"></div>
+      <div class="card-grid">
+        <button class="card c-sleep" data-go="s-evening-day">
+          <img src="./IMG_8282.png" alt="Sleep"><span>Sleep</span>
+        </button>
+        <button class="card c-medit" data-go="s-music">
+          <img src="./IMG_8333.png" alt="Meditation"><span>Meditation</span>
+        </button>
+        <button class="card c-article" data-go="s-music">
+          <img src="./IMG_8341.png" alt="Article"><span>Article</span>
+        </button>
+        <button class="card c-music" data-go="s-sleep">
+          <img src="./IMG_8335.png" alt="Music"><span>Music</span>
+        </button>
+        <button class="card c-analysis" data-go="s-evening-day">
+          <img src="./IMG_8338.png" alt="Analysis"><span>Analysis</span>
+        </button>
+        <button class="card c-night" data-go="s-home-night"><span>Night</span></button>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="s-music">
+    <div class="music-top">
+      <button class="back" data-go="s-home-night"></button>
+      <div class="vinyl-wrap">
+        <img src="./IMG_8268.png" class="vinyl-img" alt="vinyl">
+      </div>
+      <img src="./IMG_8276.png" class="tonearm" alt="tonearm">
+    </div>
+    
+    <div class="music-bottom">
+      <div class="music-row">
+        <div class="music-card">
+          <img src="./IMG_8275.png" alt="Music 1">
+          <span>Music 1</span>
+        </div>
+        <div class="music-card">
+          <img src="./IMG_8275.png" alt="Music 2">
+          <span>Music 2</span>
+        </div>
+      </div>
+      <div class="search-row">
+        <div class="search-pill"></div>
+        <button class="search-btn">
+          <img src="./IMG_8273.png" alt="search">
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="s-sleep">
+    <div class="sleep-top">
+      <button class="back dark" data-go="s-home-day"></button>
+      <div class="vinyl-wrap">
+        <img src="./IMG_8293.png" class="vinyl-img" alt="vinyl">
+      </div>
+      <img src="./IMG_8290.png" class="tonearm" alt="tonearm">
+      <h2 class="sleep-label">SLEEP</h2>
+    </div>
+    <div class="sleep-bottom">
+      <div class="music-row">
+        <div class="music-card">
+          <img src="./IMG_8620.png" alt="wave">
+          <span>Music 1</span>
+        </div>
+        <div class="music-card">
+          <img src="./IMG_8620.png" alt="wave">
+          <span>Music 2</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="s-evening-night">
+    <button class="back" data-go="s-home-night"></button>
+    <div class="evening-text-night">
+      <h2 class="greeting">Good Evening</h2>
+      <div class="clock clock-display">12:00</div>
+    </div>
+  </section>
+
+  <section class="screen" id="s-evening-day">
+    <button class="back dark" data-go="s-home-day"></button>
+    <img src="./IMG_8279.png" class="evening-bed" alt="bed">
+    <img src="./IMG_8280.png" class="evening-dots" alt="dots">
+    <div class="evening-text-day">
+      <h2 class="greeting">Good Afternoon</h2>
+      <div class="clock clock-display">12:00</div>
+    </div>
+    <img src="./IMG_8652.png" class="evening-flowers" alt="flowers">
+  </section>
+
+</div>
+
+<script>
+  function resizeApp() {
+    const app = document.getElementById('app');
+    const scale = Math.min(window.innerWidth / 1179, window.innerHeight / 2556);
+    app.style.transform = `scale(${scale})`;
+    app.style.visibility = 'visible';
+  }
+  
+  window.addEventListener('resize', resizeApp);
+  document.addEventListener('DOMContentLoaded', resizeApp);
+
+  document.addEventListener('click', (e) => {
+    const trigger = e.target.closest('[data-go]');
+    if (trigger) {
+      e.preventDefault();
+      const targetId = trigger.dataset.go;
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(targetId).classList.add('active');
+    }
+  });
+
+  function updateClock() {
+    const now = new Date();
+    const hh = String(now.getHours()).padStart(2, '0');
+    const mm = String(now.getMinutes()).padStart(2, '0');
+    const timeString = `${hh}:${mm}`;
+    document.querySelectorAll('.clock-display').forEach(el => el.textContent = timeString);
+  }
+  updateClock();
+  setInterval(updateClock, 20000);
+</script>
+</body>
+</html>
